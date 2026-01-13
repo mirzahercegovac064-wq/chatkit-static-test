@@ -93,7 +93,7 @@
         width: 56px;
         height: 56px;
         border-radius: 999px;
-        background: var(--brand);
+        background: #00364a; /* Match ChatKit accent color */
         color: #fff;
         display: flex;
         align-items: center;
@@ -334,6 +334,66 @@
               return await createSession();
             },
           },
+          theme: {
+            colorScheme: 'light',
+            radius: 'pill',
+            density: 'normal',
+            color: {
+              accent: {
+                primary: '#00364a',
+                level: 1
+              },
+              surface: {
+                background: '#ffffff',
+                foreground: '#942192'
+              }
+            },
+            typography: {
+              baseSize: 16,
+              fontFamily: '"OpenAI Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif',
+              fontFamilyMono: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "DejaVu Sans Mono", "Courier New", monospace',
+              fontSources: [
+                {
+                  family: 'OpenAI Sans',
+                  src: 'https://cdn.openai.com/common/fonts/openai-sans/v2/OpenAISans-Regular.woff2',
+                  weight: 400,
+                  style: 'normal',
+                  display: 'swap'
+                },
+                {
+                  family: 'OpenAI Sans',
+                  src: 'https://cdn.openai.com/common/fonts/openai-sans/v2/OpenAISans-Medium.woff2',
+                  weight: 500,
+                  style: 'normal',
+                  display: 'swap'
+                },
+                {
+                  family: 'OpenAI Sans',
+                  src: 'https://cdn.openai.com/common/fonts/openai-sans/v2/OpenAISans-Semibold.woff2',
+                  weight: 600,
+                  style: 'normal',
+                  display: 'swap'
+                },
+                {
+                  family: 'OpenAI Sans',
+                  src: 'https://cdn.openai.com/common/fonts/openai-sans/v2/OpenAISans-Bold.woff2',
+                  weight: 700,
+                  style: 'normal',
+                  display: 'swap'
+                }
+              ]
+            }
+          },
+          composer: {
+            placeholder: 'Skriv ett meddelande till ZAAI',
+            attachments: {
+              enabled: false
+            }
+          },
+          startScreen: {
+            greeting: 'Chatta med ZAAI!',
+            prompts: []
+          }
         });
 
         el.style.width = "100%";
