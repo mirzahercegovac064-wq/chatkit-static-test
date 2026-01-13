@@ -1,0 +1,1 @@
+# chatkit-static-test
