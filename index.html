@@ -1,80 +1,401 @@
+<!-- File: index.html (Render Static Site) -->
 <!doctype html>
 <html lang="sv">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ChatKit test</title>
+    <title>ChatKit test (Render)</title>
 
+    <!-- ChatKit CDN -->
     <script
       src="https://cdn.platform.openai.com/deployments/chatkit/chatkit.js"
-      async
+      defer
     ></script>
-  </head>
 
-  <body style="font-family: system-ui; padding: 16px;">
-    <h1>ChatKit test</h1>
-    <button id="start">Start chat</button>
-    <pre id="debug" style="margin-top:12px;background:#f6f6f6;padding:10px;border-radius:8px;"></pre>
-    <div id="mount" style="margin-top:16px;"></div>
-
-    <script>
-const BACKEND = "https://zaai-chatkit.onrender.com";
-      const debug = (msg) => (document.getElementById("debug").textContent += msg + "\n");
-
-      async function getClientSecret() {
-        debug("Fetching client_secret...");
-        const res = await fetch(`${BACKEND}/api/chatkit/session`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ device_id: localStorage.getItem("device_id") || null }),
-        });
-
-        debug(`Session status: ${res.status}`);
-        const text = await res.text();
-        debug(`Session body: ${text}`);
-
-        if (!res.ok) throw new Error(`Session failed ${res.status}: ${text}`);
-
-        const data = JSON.parse(text);
-        if (data.user) localStorage.setItem("device_id", data.user);
-        if (!data.client_secret) throw new Error("Missing client_secret");
-        return data.client_secret;
+    <style>
+      :root {
+        --brand: #111111;
+        --bg: #ffffff;
+        --muted: #f6f6f6;
+        --border: #e9e9e9;
+        --text: #111111;
+        --text-muted: #666666;
+        --shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+        --radius: 16px;
+        --z: 2147483000;
       }
 
-      function mountChatkit() {
-        const mount = document.getElementById("mount");
+      body {
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        margin: 0;
+        padding: 16px;
+        color: var(--text);
+        background: #fafafa;
+      }
+
+      .wrap {
+        max-width: 960px;
+        margin: 0 auto;
+      }
+
+      .card {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 14px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+      }
+
+      .row {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        font-size: 12px;
+        color: var(--text-muted);
+        overflow-wrap: anywhere;
+      }
+
+      .btn {
+        padding: 10px 12px;
+        border-radius: 12px;
+        border: 1px solid #d7d7d7;
+        background: #fff;
+        cursor: pointer;
+        font-weight: 700;
+      }
+
+      .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      .debug {
+        margin-top: 12px;
+        padding: 12px;
+        background: var(--muted);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        white-space: pre-wrap;
+        min-height: 80px;
+      }
+
+      /* Bubble + panel */
+      .bubble {
+        position: fixed;
+        right: 20px;
+        bottom: 20px;
+        width: 56px;
+        height: 56px;
+        border-radius: 999px;
+        background: var(--brand);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        cursor: pointer;
+        box-shadow: 0 10px 30px rgba(0,0,0,.2);
+        z-index: var(--z);
+        user-select: none;
+      }
+
+      .panel {
+        position: fixed;
+        right: 20px;
+        bottom: 90px;
+        width: 380px;
+        max-width: calc(100vw - 40px);
+        height: 560px;
+        max-height: calc(100vh - 140px);
+        background: var(--bg);
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow);
+        z-index: var(--z);
+        display: none;
+        overflow: hidden;
+        flex-direction: column;
+      }
+
+      .panel-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .panel-title {
+        font-weight: 800;
+        font-size: 14px;
+      }
+
+      .panel-close {
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        font-size: 18px;
+        font-weight: 900;
+        line-height: 1;
+      }
+
+      .panel-body {
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        flex: 1;
+        background: #fafafa;
+      }
+
+      .panel-note {
+        padding: 10px;
+        border: 1px dashed var(--border);
+        border-radius: 12px;
+        background: #fff;
+        color: var(--text-muted);
+        font-size: 12px;
+      }
+
+      .chatkit-mount {
+        flex: 1;
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+      }
+
+      .small {
+        font-size: 12px;
+        color: var(--text-muted);
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="wrap">
+      <h1 style="margin: 0 0 10px 0;">ChatKit test (utan Framer)</h1>
+
+      <div class="card">
+        <div class="row">
+          <div>
+            <div style="font-weight: 800;">Backend</div>
+            <div class="mono" id="backendLabel"></div>
+            <div class="small" id="originLabel"></div>
+          </div>
+
+          <div class="row">
+            <button class="btn" id="btnHealth">Testa /health</button>
+            <button class="btn" id="btnSession">Testa session</button>
+            <button class="btn" id="btnClear">Rensa logg</button>
+          </div>
+        </div>
+
+        <div class="debug mono" id="debug"></div>
+      </div>
+    </div>
+
+    <!-- Bubble UI -->
+    <div class="bubble" id="bubble" aria-label="Öppna chat" role="button" tabindex="0">Chat</div>
+
+    <div class="panel" id="panel" role="dialog" aria-modal="true">
+      <div class="panel-header">
+        <div class="panel-title">ChatKit</div>
+        <button class="panel-close" id="closeBtn" aria-label="Stäng">×</button>
+      </div>
+
+      <div class="panel-body">
+        <div class="panel-note" id="panelNote">
+          Klicka “Chat” för att starta. Om det fastnar: kolla debug-loggen och Network-tabben.
+        </div>
+        <div class="chatkit-mount" id="chatMount"></div>
+      </div>
+    </div>
+
+    <script>
+      // =========================
+      // CONFIG
+      // =========================
+      const BACKEND_BASE_URL = "https://zaai-chatkit.onrender.com"; // <-- din FastAPI Render URL
+      const SESSION_ENDPOINT = `${BACKEND_BASE_URL}/api/chatkit/session`;
+      const HEALTH_ENDPOINT = `${BACKEND_BASE_URL}/health`;
+
+      // =========================
+      // UI HELPERS
+      // =========================
+      const $ = (id) => document.getElementById(id);
+
+      function logLine(msg) {
+        const line = `[${new Date().toISOString()}] ${msg}\n`;
+        $("debug").textContent += line;
+        console.log(msg);
+      }
+
+      function clearLog() {
+        $("debug").textContent = "";
+      }
+
+      function setPanelOpen(open) {
+        $("panel").style.display = open ? "flex" : "none";
+      }
+
+      $("backendLabel").textContent = BACKEND_BASE_URL;
+      $("originLabel").textContent = `Origin: ${location.origin}`;
+
+      // =========================
+      // NETWORK HELPERS
+      // =========================
+      async function fetchText(url, options) {
+        const res = await fetch(url, options);
+        const text = await res.text().catch(() => "");
+        return { res, text };
+      }
+
+      async function testHealth() {
+        logLine(`GET ${HEALTH_ENDPOINT}`);
+        const { res, text } = await fetchText(HEALTH_ENDPOINT, { method: "GET" });
+        logLine(`health status=${res.status}`);
+        logLine(`health body=${text}`);
+        if (!res.ok) throw new Error(`Health failed ${res.status}: ${text || res.statusText}`);
+      }
+
+      async function createSession() {
+        const deviceIdKey = "chatkit_device_id";
+        const existingDeviceId = localStorage.getItem(deviceIdKey);
+
+        logLine(`POST ${SESSION_ENDPOINT} device_id=${existingDeviceId || "(new)"}`);
+
+        const { res, text } = await fetchText(SESSION_ENDPOINT, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ device_id: existingDeviceId || null }),
+        });
+
+        logLine(`session status=${res.status}`);
+        logLine(`session body=${text}`);
+
+        if (!res.ok) {
+          // Classic: CORS will show in console, not as a response, but this helps when we do get a response.
+          throw new Error(`Session failed ${res.status}: ${text || res.statusText}`);
+        }
+
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch {
+          throw new Error(`Session returned non-JSON: ${text.slice(0, 200)}`);
+        }
+
+        if (data.user) localStorage.setItem(deviceIdKey, data.user);
+        if (!data.client_secret) throw new Error("Missing client_secret in session response");
+
+        return String(data.client_secret);
+      }
+
+      // =========================
+      // CHATKIT MOUNT
+      // =========================
+      async function ensureChatkitLoaded() {
+        // If the CDN is blocked by adblock/CSP, this never resolves.
+        if (customElements.get("openai-chatkit")) return;
+
+        logLine("Waiting for ChatKit web component (openai-chatkit)...");
+        const timeoutMs = 15000;
+
+        await Promise.race([
+          customElements.whenDefined("openai-chatkit"),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("ChatKit script didn't load within 15s (blocked by CSP/adblock?)")), timeoutMs)
+          ),
+        ]);
+
+        logLine("ChatKit component is ready.");
+      }
+
+      async function mountChatkit() {
+        await ensureChatkitLoaded();
+
+        const mount = $("chatMount");
         mount.innerHTML = "";
 
-        const chatkit = document.createElement("openai-chatkit");
-        chatkit.setOptions({
+        const el = document.createElement("openai-chatkit");
+
+        el.setOptions({
           api: {
             async getClientSecret(existing) {
-              return existing || (await getClientSecret());
+              // Keep existing if provided; otherwise create a new session.
+              if (existing) return existing;
+              return await createSession();
             },
           },
         });
 
-        chatkit.style.height = "600px";
-        chatkit.style.width = "360px";
-        chatkit.style.maxWidth = "100%";
-        chatkit.style.border = "1px solid #eee";
-        chatkit.style.borderRadius = "16px";
-        chatkit.style.overflow = "hidden";
+        el.style.width = "100%";
+        el.style.height = "100%";
 
-        mount.appendChild(chatkit);
+        mount.appendChild(el);
+        logLine("Mounted <openai-chatkit>.");
       }
 
-      document.getElementById("start").addEventListener("click", async () => {
+      // =========================
+      // EVENTS
+      // =========================
+      async function openAndStartChat() {
+        setPanelOpen(true);
+        $("panelNote").textContent = "Startar…";
+
         try {
-          await getClientSecret();
-          debug("Mounting ChatKit...");
-          mountChatkit();
+          // sanity checks to make errors obvious
+          await testHealth();
+          await createSession();
+          await mountChatkit();
+          $("panelNote").textContent = "Klar. Om chatten fortfarande inte svarar: kontrollera trusted domain och CORS.";
         } catch (e) {
-          debug("ERROR: " + (e?.message || String(e)));
-          console.error(e);
+          const msg = e?.message || String(e);
+          $("panelNote").textContent = `Fel: ${msg}`;
+          logLine(`ERROR: ${msg}`);
+          alert(msg);
+        }
+      }
+
+      $("btnClear").addEventListener("click", clearLog);
+
+      $("btnHealth").addEventListener("click", async () => {
+        try {
+          await testHealth();
+          alert("Health OK");
+        } catch (e) {
           alert(e?.message || String(e));
         }
       });
+
+      $("btnSession").addEventListener("click", async () => {
+        try {
+          await createSession();
+          alert("Session OK (client_secret received)");
+        } catch (e) {
+          alert(e?.message || String(e));
+        }
+      });
+
+      $("bubble").addEventListener("click", openAndStartChat);
+      $("bubble").addEventListener("keydown", (ev) => {
+        if (ev.key === "Enter" || ev.key === " ") openAndStartChat();
+      });
+
+      $("closeBtn").addEventListener("click", () => setPanelOpen(false));
+
+      // initial log
+      clearLog();
+      logLine("Page loaded.");
+      logLine(`Backend: ${BACKEND_BASE_URL}`);
+      logLine("Tip: Open DevTools → Network. If ChatKit script is blocked, you’ll see it there.");
     </script>
   </body>
 </html>
