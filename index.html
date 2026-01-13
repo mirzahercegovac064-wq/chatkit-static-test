@@ -93,14 +93,16 @@
         width: 56px;
         height: 56px;
         border-radius: 999px;
-        background: #9F80DA; /* Match ChatKit accent color */
-        color: #fff;
+        background: #ffffff;
+        color: #333;
         display: flex;
         align-items: center;
         justify-content: center;
         font-weight: 800;
+        font-size: 24px;
         cursor: pointer;
         box-shadow: 0 10px 30px rgba(0,0,0,.2);
+        border: 1px solid #e9e9e9;
         z-index: var(--z);
         user-select: none;
       }
@@ -202,7 +204,7 @@
     </div>
 
     <!-- Bubble UI -->
-    <div class="bubble" id="bubble" aria-label="Öppna chat" role="button" tabindex="0">Chat</div>
+    <div class="bubble" id="bubble" aria-label="Öppna chat" role="button" tabindex="0">💬</div>
 
     <div class="panel" id="panel" role="dialog" aria-modal="true">
       <div class="panel-header">
