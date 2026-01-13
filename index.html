@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="sv">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ChatKit test</title>
+
+    <script
+      src="https://cdn.platform.openai.com/deployments/chatkit/chatkit.js"
+      async
+    ></script>
+  </head>
+
+  <body style="font-family: system-ui; padding: 16px;">
+    <h1>ChatKit test</h1>
+    <button id="start">Start chat</button>
+    <pre id="debug" style="margin-top:12px;background:#f6f6f6;padding:10px;border-radius:8px;"></pre>
+    <div id="mount" style="margin-top:16px;"></div>
+
+    <script>
+      const BACKEND = "https://zaai-chatkit.onrender.com"; // <-- din backend
+      const debug = (msg) => (document.getElementById("debug").textContent += msg + "\n");
+
+      async function getClientSecret() {
+        debug("Fetching client_secret...");
+        const res = await fetch(`${BACKEND}/api/chatkit/session`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ device_id: localStorage.getItem("device_id") || null }),
+        });
+
+        debug(`Session status: ${res.status}`);
+        const text = await res.text();
+        debug(`Session body: ${text}`);
+
+        if (!res.ok) throw new Error(`Session failed ${res.status}: ${text}`);
+
+        const data = JSON.parse(text);
+        if (data.user) localStorage.setItem("device_id", data.user);
+        if (!data.client_secret) throw new Error("Missing client_secret");
+        return data.client_secret;
+      }
+
+      function mountChatkit() {
+        const mount = document.getElementById("mount");
+        mount.innerHTML = "";
+
+        const chatkit = document.createElement("openai-chatkit");
+        chatkit.setOptions({
+          api: {
+            async getClientSecret(existing) {
+              return existing || (await getClientSecret());
+            },
+          },
+        });
+
+        chatkit.style.height = "600px";
+        chatkit.style.width = "360px";
+        chatkit.style.maxWidth = "100%";
+        chatkit.style.border = "1px solid #eee";
+        chatkit.style.borderRadius = "16px";
+        chatkit.style.overflow = "hidden";
+
+        mount.appendChild(chatkit);
+      }
+
+      document.getElementById("start").addEventListener("click", async () => {
+        try {
+          await getClientSecret();
+          debug("Mounting ChatKit...");
+          mountChatkit();
+        } catch (e) {
+          debug("ERROR: " + (e?.message || String(e)));
+          console.error(e);
+          alert(e?.message || String(e));
+        }
+      });
+    </script>
+  </body>
+</html>
